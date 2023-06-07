@@ -29,13 +29,21 @@ import static hex.util.DistributionUtils.familyToDistribution;
 /**
  * An ensemble of other models, created by <i>stacking</i> with the SuperLearner algorithm or a variation.
  */
-public class StackedEnsembleModel extends Model<StackedEnsembleModel,StackedEnsembleModel.StackedEnsembleParameters,StackedEnsembleModel.StackedEnsembleOutput> {
+public class StackedEnsembleModel 
+        extends Model<StackedEnsembleModel,StackedEnsembleModel.StackedEnsembleParameters,StackedEnsembleModel.StackedEnsembleOutput> 
+        implements Model.Contributions{
 
   // common parameters for the base models (keeping them public for backwards compatibility, although it's nonsense)
   public ModelCategory modelCategory;
   public long trainingFrameRows = -1;
 
   public String responseColumn = null;
+
+  @Override
+  public Frame scoreContributions(Frame frame, Key<Frame> destination_key) {
+    // calculate contribution from basemodels and make a weighted average; weighted by metalearner's contribution
+    return null;
+  }
 
   public enum StackingStrategy {
     cross_validation,
