@@ -12,6 +12,8 @@ import java.math.BigInteger;
 
 import static java.math.BigInteger.ONE;
 import static java.math.BigInteger.ZERO;
+import static water.rapids.Merge.MEM_MULTIPLIER;
+import static water.rapids.Merge.OPTIMAL_BATCHSIZE;
 
 
 // counted completer so that left and right index can run at the same time
@@ -51,7 +53,7 @@ class RadixOrder extends H2O.H2OCountedCompleter<RadixOrder> {
     // it when aligning two keys in Merge()
     int keySize = ArrayUtils.sum(_bytesUsed);
     // 256MB is the DKV limit.  / 2 because we fit o and x together in one OXBatch.
-    int batchSize = 1048576 ; // larger, requires more memory with less remote row fetch and vice versa for smaller
+    int batchSize = OPTIMAL_BATCHSIZE ; // larger, requires more memory with less remote row fetch and vice versa for smaller
     // go through all node memory and reduce batchSize if needed
     long minMem = Long.MAX_VALUE;
     for (H2ONode h2o : H2O.CLOUD._memary) {
@@ -61,12 +63,12 @@ class RadixOrder extends H2O.H2OCountedCompleter<RadixOrder> {
     }
     // at some point, a MSB worth of compare columns will be stored at any one node.  Make sure we have enough memory
     // for that.
-    long minSortMemory = _whichCols.length*Math.max(_DF.numRows(), batchSize)*8*4*25;
+    long minSortMemory = _whichCols.length*Math.max(_DF.numRows(), batchSize)*8*MEM_MULTIPLIER;
     if (minMem < minSortMemory) // if not enough, just throw an error and get out
       throw new RuntimeException("The minimum memory of one of your nodes is too small to accommodate the sorting " +
               "operation.  Make sure the smallest node has at least "+minSortMemory+" bytes of memory.");
     // an array of size batchsize by numCols will be created for each sorted chunk in the end.  Memory is in bytes
-    long expandFactor = 8*((long) _DF.numCols())*100; // 8 to translate 64 bits into 8 bytes, 100 is a scale up factor 
+    long expandFactor = 8*((long) _DF.numCols())*MEM_MULTIPLIER; // 8 to translate 64 bits into 8 bytes, 100 is a scale up factor 
     long batchMemory = Math.max((long) batchSize*expandFactor, minSortMemory);
     if (batchMemory > minMem) {  // batchsize is too big for node with smallest memory, reduce it
       batchSize = (int) Math.floor(minMem/expandFactor);

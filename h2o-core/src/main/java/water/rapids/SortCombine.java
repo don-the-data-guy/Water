@@ -77,7 +77,6 @@ class SortCombine extends DTask<SortCombine> {
     _leftKO = new KeyOrder(_leftSortedOXHeader, _mergeId);
     _leftKO.initKeyOrder(_leftSB._msb,/*left=*/true);
     _retBatchSize = (int) _leftKO._batchSize;
-    Log.info("retBatchSize ", _retBatchSize);
     final long leftN = _leftSortedOXHeader._numRows; // store number of rows in left frame for the MSB
     assert leftN >= 1;
     _timings[0] += (System.nanoTime() - t0) / 1e9;
